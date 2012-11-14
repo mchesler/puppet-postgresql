@@ -20,6 +20,7 @@ class postgresql::params {
   $ipv6acls                     = []
   # TODO: figure out a way to make this not platform-specific
   $manage_redhat_firewall       = false
+  $package_version              = '9.1'
 
   # This is a bit hacky, but if the puppet nodes don't have pluginsync enabled,
   # they will fail with a not-so-helpful error message.  Here we are explicitly
@@ -39,17 +40,33 @@ class postgresql::params {
 
   case $::osfamily {
     'RedHat': {
-      $service_name             = 'postgresql'
-      $client_package_name      = 'postgresql'
-      $server_package_name      = 'postgresql-server'
-      $devel_package_name       = 'postgresql-devel'
-      $needs_initdb             = true
-      $initdb_path              = '/usr/bin/initdb'
-      $createdb_path            = '/usr/bin/createdb'
-      $psql_path                = '/usr/bin/psql'
-      $datadir                  = '/var/lib/pgsql/data/'
-      $pg_hba_conf_path         = '/var/lib/pgsql/data/pg_hba.conf'
-      $postgresql_conf_path     = '/var/lib/pgsql/data/postgresql.conf'
+      case $package_version {
+        '9.1': {
+          $service_name         = 'postgresql-9.1'
+          $client_package_name  = 'postgresql91'
+          $server_package_name  = 'postgresql91-server'
+          $devel_package_name   = 'postgresql-devel'
+          $initdb_path          = '/usr/pgsql-9.1/bin/initdb'
+          $createdb_path        = '/usr/pgsql-9.1/bin/createdb'
+          $psql_path            = '/usr/pgsql-9.1/bin/psql'
+          $datadir              = '/var/lib/pgsql/9.1/data/'
+          $pg_hba_conf_path     = '/var/lib/pgsql/9.1/data/pg_hba.conf'
+          $postgresql_conf_path = '/var/lib/pgsql/9.1/data/postgresql.conf'
+        }
+        '8.4': {
+          $service_name             = 'postgresql'
+          $client_package_name      = 'postgresql'
+          $server_package_name      = 'postgresql-server'
+          $devel_package_name       = 'postgresql-devel'
+          $initdb_path              = '/usr/bin/initdb'
+          $createdb_path            = '/usr/bin/createdb'
+          $psql_path                = '/usr/bin/psql'
+          $datadir                  = '/var/lib/pgsql/data/'
+          $pg_hba_conf_path         = '/var/lib/pgsql/data/pg_hba.conf'
+          $postgresql_conf_path     = '/var/lib/pgsql/data/postgresql.conf'
+        }
+      }
+      $needs_initdb             = true      
       $firewall_supported       = true
       $persist_firewall_command = '/sbin/iptables-save > /etc/sysconfig/iptables'
     }
@@ -85,7 +102,6 @@ class postgresql::params {
       #$persist_firewall_command = '/sbin/iptables-save > /etc/iptables/rules.v4'
 
     }
-
 
     default: {
       fail("Unsupported osfamily: ${::osfamily} operatingsystem: ${::operatingsystem}, module ${module_name} currently only supports osfamily RedHat and Debian")
